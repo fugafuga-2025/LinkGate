@@ -28,6 +28,11 @@ func SetupRoutes(r *gin.Engine, collection *mongo.Collection, ctx context.Contex
 		service.CreateMessage(c, collection)
 	})
 
+	// DELETE /messages: 登録されている全ての投稿を削除します。
+	r.DELETE("/messages", func(c *gin.Context) {
+		service.DeleteAllMessage(c, collection)
+	})
+
 	// ヘルスチェック: サーバーと DB の状態をチェック
 	r.GET("/health", func(c *gin.Context) {
 		if err := client.Ping(ctx, nil); err != nil {

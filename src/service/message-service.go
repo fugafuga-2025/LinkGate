@@ -54,3 +54,16 @@ func CreateMessage(c *gin.Context, collection *mongo.Collection) {
 	// 登録したドキュメントを返却
 	c.JSON(http.StatusCreated, message)
 }
+
+// 全てのメッセージを削除
+func DeleteAllMessage(c *gin.Context, collection *mongo.Collection) {
+	// タイムアウト付き context を作成
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	// 全てのドキュメントを削除
+	if _, err := collection.DeleteMany(ctx, bson.M{}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "データ削除に失敗しました", "details": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "全てのメッセージを削除しました"})
+}
