@@ -16,10 +16,6 @@ import (
 func main() {
 	// MongoDB 接続 URI を環境変数から取得します。設定されていない場合はデフォルトを使用します。
 	mongoURI := os.Getenv("MONGODB_URI")
-	if mongoURI == "" {
-		// docker-compose.yml で指定されている linkgate データベースを使用
-		mongoURI = "mongodb://mongodb:27017/linkgate"
-	}
 
 	// MongoDB に接続するための context
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -33,7 +29,7 @@ func main() {
 	// アプリ終了時にクライアントを必ず切断する
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
-			log.Printf("Failed to disconnect from MongoDB: %v", err)
+			log.Printf("MongoDBの切断に失敗🥺: %v", err)
 		}
 	}()
 
