@@ -42,6 +42,7 @@ func CreateMessage(c *gin.Context, collection *mongo.Collection) {
 	}
 	// ID と作成日時を設定
 	message.ID = primitive.NewObjectID()
+	message.User.ID = primitive.NewObjectID()
 	message.CreatedAt = time.Now()
 	// MongoDB にドキュメントを挿入
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
