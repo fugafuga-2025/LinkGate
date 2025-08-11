@@ -43,4 +43,8 @@ func main() {
 	// ルーティングのセットアップ
 	router.SetupRoutes(r, collection, ctx, client)
 
+	// サーバーを起動
+	if err := r.Run(":8080"); err != nil {
+		log.Fatal("サーバーの起動に失敗🥺:", err)
+	}
 }

@@ -3,7 +3,6 @@ package router
 import (
 	"context"
 	"fuagfuga-2025-LinkGate/src/service"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -47,9 +46,4 @@ func SetupRoutes(r *gin.Engine, collection *mongo.Collection, ctx context.Contex
 			"database": "connected",
 		})
 	})
-
-	// サーバーを起動
-	if err := r.Run(":8080"); err != nil {
-		log.Fatal("サーバーの起動に失敗🥺:", err)
-	}
 }
