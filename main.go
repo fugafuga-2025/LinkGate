@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fuagfuga-2025-LinkGate/src/router"
 	"log"
-	"net/http"
 	"time"
+
+	"os"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -12,47 +14,37 @@ import (
 )
 
 func main() {
-	// MongoDB接続
+	// MongoDB 接続 URI を環境変数から取得します。設定されていない場合はデフォルトを使用します。
+	mongoURI := os.Getenv("MONGODB_URI")
+
+	// MongoDB に接続するための context
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
-	client, err := mongo.Connect(ctx, options.Client().ApplyURI("mongodb://mongodb:27017"))
+	// MongoDB クライアントの作成
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(mongoURI))
 	if err != nil {
 		log.Fatal(err)
 	}
+	// アプリ終了時にクライアントを必ず切断する
 	defer func() {
 		if err := client.Disconnect(ctx); err != nil {
-			log.Printf("Failed to disconnect from MongoDB: %v", err)
+			log.Printf("MongoDBの切断に失敗🥺: %v", err)
 		}
 	}()
 
-	// Gin router setup
+	// 使用するデータベースとコレクションを選択
+	db := client.Database("linkgate")
+	collection := db.Collection("posts")
+
+	// Gin エンジンを初期化
 	r := gin.Default()
 
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "LinkGate API is running!!",
-		})
-	})
+	// ルーティングのセットアップ
+	router.SetupRoutes(r, collection, ctx, client)
 
-	r.GET("/health", func(c *gin.Context) {
-		// MongoDB ping test
-		err := client.Ping(ctx, nil)
-		if err != nil {
-			c.JSON(http.StatusServiceUnavailable, gin.H{
-				"status":   "unhealthy",
-				"database": "disconnected",
-			})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{
-			"status":   "healthy",
-			"database": "connected",
-		})
-	})
-
+	// サーバーを起動
 	if err := r.Run(":8080"); err != nil {
-		log.Fatal("Failed to start server:", err)
+		log.Fatal("サーバーの起動に失敗🥺:", err)
 	}
 }
