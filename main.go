@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fuagfuga-2025-LinkGate/src/router"
+	"fuagfuga-2025-LinkGate/src/usecase"
 	"log"
 	"time"
 
@@ -42,6 +43,8 @@ func main() {
 
 	// ルーティングのセットアップ
 	router.SetupRoutes(r, collection, ctx, client)
+
+	go usecase.WatchChanges(collection)
 
 	// サーバーを起動
 	if err := r.Run(":8080"); err != nil {
