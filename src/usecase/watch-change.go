@@ -32,8 +32,7 @@ func WatchChanges(coll *mongo.Collection) {
 		}
 
 		// コンソール通知
-		fmt.Printf("📢 MongoDB change detected: %+v\n", event)
-		println("📢 DBに変更がありました: %+v\n", event)
+		fmt.Printf("📢 DBに変更がありました: %+v\n", event)
 	}
 
 	if err := stream.Err(); err != nil {
