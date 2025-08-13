@@ -12,17 +12,19 @@ services:
     depends_on:
       - mongodb
     environment:
-      - MONGODB_URI=mongodb://mongodb:27017/linkgate
+      - MONGODB_URI=mongodb://mongodb:27017/linkgate?replicaSet=rs0
 
   mongodb:
     image: mongo:7.0
     restart: unless-stopped
     ports:
       - "27017:27017"
+    command: ["/bin/bash", "-c", "mongod --replSet rs0 --bind_ip_all & sleep 5 && mongosh --eval 'try { rs.initiate({_id: \"rs0\", members: [{ _id: 0, host: \"mongodb:27017\" }]}) } catch(e) { print(e) }' && wait"]
     environment:
       - MONGO_INITDB_DATABASE=linkgate
     volumes:
       - mongodb_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
 
 volumes:
   mongodb_data:

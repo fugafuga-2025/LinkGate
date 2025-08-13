@@ -8,6 +8,7 @@
   // "features": {},
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally
+  "runServices": ["app", "mongodb"],
   "forwardPorts": [8080, 27017],
 
   // Use 'postCreateCommand' to run commands after the container is created
