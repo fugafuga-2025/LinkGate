@@ -3,7 +3,7 @@ package model
 import (
 	"encoding/json"
 	"errors"
-
+	
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -14,8 +14,8 @@ type User struct {
 	Name string `bson:"name,omitempty" json:"name"`
 	// プラットフォーム
 	Platform Platform `bson:"platform,omitempty" json:"platform"`
-	// 管理者権限の有無
-	IsAdmin bool `bson:"isAdmin,omitempty" json:"isAdmin"`
+	// アイコンURL
+	IconUrl string `bson:"iconUrl,omitempty" json:"iconUrl"`
 }
 
 var allowedPlatforms = map[Platform]struct{}{
