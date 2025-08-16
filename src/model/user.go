@@ -9,13 +9,13 @@ import (
 
 type User struct {
 	// ドキュメントID
-	ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID primitive.ObjectID `bson:"_id" json:"id"`
 	// ユーザー名
-	Name string `bson:"name,omitempty" json:"name"`
+	Name string `bson:"name" json:"name"`
 	// プラットフォーム
-	Platform Platform `bson:"platform,omitempty" json:"platform"`
+	Platform Platform `bson:"platform" json:"platform"`
 	// アイコンURL
-	IconUrl string `bson:"iconUrl,omitempty" json:"iconUrl"`
+	IconUrl string `bson:"iconUrl" json:"iconUrl"`
 }
 
 var allowedPlatforms = map[Platform]struct{}{

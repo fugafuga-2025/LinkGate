@@ -8,7 +8,7 @@ import (
 
 type Message struct {
 	// ドキュメントID
-	ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID primitive.ObjectID `bson:"_id" json:"id"`
 	// 投稿者情報
 	User User `bson:"user" json:"user"`
 	// 投稿内容

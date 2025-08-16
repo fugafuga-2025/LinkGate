@@ -6,9 +6,9 @@ import (
 
 type Content struct {
 	// コンテンツID
-	ID primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"`
+	ID primitive.ObjectID `bson:"_id" json:"id"`
 	// コンテンツ文章
-	Text string `bson:"text,omitempty" json:"text"`
+	Text string `bson:"text" json:"text"`
 	// 添付ファイル配列
-	Attachments []Attachment `bson:"attachments,omitempty" json:"attachments"`
+	Attachments []Attachment `bson:"attachments" json:"attachments"`
 }
