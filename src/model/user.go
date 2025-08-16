@@ -3,7 +3,7 @@ package model
 import (
 	"encoding/json"
 	"errors"
-	
+
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 

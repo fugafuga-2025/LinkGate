@@ -35,6 +35,7 @@ func GetMessages(c *gin.Context, collection *mongo.Collection) {
 // 新規メッセージを作成
 func CreateMessage(c *gin.Context, collection *mongo.Collection) {
 	var message model.Message
+
 	// リクエスト JSON を構造体にバインド
 	if err := c.ShouldBindJSON(&message); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "無効なリクエストです", "details": err.Error()})
@@ -42,8 +43,10 @@ func CreateMessage(c *gin.Context, collection *mongo.Collection) {
 	}
 	// ID と作成日時を設定
 	message.ID = primitive.NewObjectID()
+	message.Content.ID = primitive.NewObjectID()
 	message.User.ID = primitive.NewObjectID()
 	message.CreatedAt = time.Now()
+
 	// MongoDB にドキュメントを挿入
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
