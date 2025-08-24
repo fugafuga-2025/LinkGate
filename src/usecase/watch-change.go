@@ -3,9 +3,10 @@ package usecase
 import (
 	"context"
 	"fmt"
+	"fuagfuga-2025-LinkGate/src/model"
+	"fuagfuga-2025-LinkGate/src/usecase/line"
 	"log"
 
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -25,10 +26,22 @@ func WatchChanges(coll *mongo.Collection) {
 	fmt.Println("🔍 Change stream 開始...")
 
 	for stream.Next(ctx) {
-		var event bson.M
+		var event struct {
+			OperationType string        `bson:"operationType"`
+			FullDocument  model.Message `bson:"fullDocument"`
+		}
 		if err := stream.Decode(&event); err != nil {
 			log.Println("Decode error:", err)
 			continue
+		}
+
+		fullDoc := event.FullDocument
+		platform := fullDoc.User.Platform
+
+		if platform != model.PlatformLINE {
+			if event.OperationType == "insert" {
+				line.CreateLINEMessage(fullDoc)
+			}
 		}
 
 		// コンソール通知
