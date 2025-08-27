@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"fuagfuga-2025-LinkGate/src/model"
+	"fuagfuga-2025-LinkGate/src/usecase/discord"
 	"fuagfuga-2025-LinkGate/src/usecase/line"
 	"log"
 
@@ -38,9 +39,15 @@ func WatchChanges(coll *mongo.Collection) {
 		fullDoc := event.FullDocument
 		platform := fullDoc.User.Platform
 
-		if platform != model.PlatformLINE {
-			if event.OperationType == "insert" {
+		// 新規メッセージ挿入時に各プラットフォームへ転送します。
+		if event.OperationType == "insert" {
+			// 元プラットフォームがLINEでなければLINEへ送信
+			if platform != model.PlatformLINE {
 				line.CreateLINEMessage(fullDoc)
+			}
+			// 元プラットフォームがDiscordでなければDiscordへ送信
+			if platform != model.PlatformDiscord {
+				discord.CreateDiscordMessage(fullDoc)
 			}
 		}
 
