@@ -8,8 +8,10 @@ import (
 )
 
 type User struct {
-	// ドキュメントID
-	ID primitive.ObjectID `bson:"_id" json:"id"`
+	// ID
+	ID primitive.ObjectID `bson:"_id" json:"_id"`
+	// ユーザーID
+	UserID string `bson:"userId" json:"userId"`
 	// ユーザー名
 	Name string `bson:"name" json:"name"`
 	// プラットフォーム
