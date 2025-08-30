@@ -22,17 +22,20 @@ var groupID = os.Getenv("LINE_GROUP_ID")
 
 var bot *linebot.Client
 
-func createBot() {
+func createBot() error {
 	var err error
-
+	
 	bot, err = linebot.New(channelSecret, channelToken)
-	if err != nil {
-		fmt.Printf("LINE botの生成に失敗しました:%s", err)
-	}
+	return err
 }
 
 func CreateLINEMessage(msg model.Message) {
-	createBot()
+	err := createBot()
+
+	if err != nil {
+		fmt.Printf("LINE botの生成に失敗しました:%s", err)
+		return
+	}
 
 	// メッセージ送信者、内容、送信元プラットフォームを取得
 	userName := msg.User.Name
@@ -40,7 +43,9 @@ func CreateLINEMessage(msg model.Message) {
 	platform := msg.User.Platform
 
 	lineText := linebot.NewTextMessage(fmt.Sprintf("from: %sさん\n\n%s\n\n(Platform: %s)", userName, text, platform))
-	if _, err := bot.PushMessage(groupID, lineText).Do(); err != nil {
+	_, err = bot.PushMessage(groupID, lineText).Do()
+
+	if err != nil {
 		if apiErr, ok := err.(*linebot.APIError); ok {
 			fmt.Printf("LINE API Error: code=%d message=%s\n", apiErr.Code, apiErr.Response.Message)
 
@@ -50,13 +55,18 @@ func CreateLINEMessage(msg model.Message) {
 		} else {
 			fmt.Println("Other error:", err)
 		}
+
 	} else {
 		log.Println("LINE送信成功")
 	}
 }
 
 func SaveLINEMessageToMongoDB(obj map[string]interface{}, collection *mongo.Collection) {
-	createBot()
+	err := createBot()
+	if err != nil {
+		fmt.Printf("LINEbotの生成に失敗しました: %s", err)
+		return
+	}
 
 	event := obj["events"].([]interface{})[0].(map[string]interface{})
 	userId, _ := GetUserID(event)
@@ -66,6 +76,7 @@ func SaveLINEMessageToMongoDB(obj map[string]interface{}, collection *mongo.Coll
 	userName, err := GetUserName(bot, groupId, userId)
 	if err != nil {
 		println("ユーザー名の取得に失敗しました:", err)
+		return
 	}
 
 	var message model.Message
@@ -85,6 +96,7 @@ func SaveLINEMessageToMongoDB(obj map[string]interface{}, collection *mongo.Coll
 	defer cancel()
 	if _, err := collection.InsertOne(ctx, message); err != nil {
 		fmt.Println("データ登録に失敗しました:", err)
+		return
 	}
 
 	fmt.Printf("%s\n%s\n%s\n%s\n", userId, groupId, text, userName)
