@@ -2,10 +2,8 @@ package router
 
 import (
 	"context"
-	"fmt"
+	"fuagfuga-2025-LinkGate/src/controller"
 	"fuagfuga-2025-LinkGate/src/service"
-	"io"
-	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -52,21 +50,7 @@ func SetupRoutes(r *gin.Engine, collection *mongo.Collection, ctx context.Contex
 
 	// === LINE API ===
 	// webhookのイベントをキャッチ
-	r.POST("/webhook", func(c *gin.Context) {
-		// リクエストボディを読み取る
-		body, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			log.Println("読み取りエラー:", err)
-			c.Status(http.StatusBadRequest)
-			return
-		}
-
-		// JSONをそのままコンソールに出力
-		fmt.Println("==== Webhook JSON ====")
-		fmt.Println(string(body))
-		fmt.Println("======================")
-
-		// 200 OK を返す
-		c.Status(http.StatusOK)
+	r.Any("/linehook", func(c *gin.Context) {
+		controller.LINEController(c, collection)
 	})
 }
