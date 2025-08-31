@@ -251,7 +251,7 @@ func (h *SlackHandler) SendMessage(channelID, message string) error {
 // CreateSlackMessage はMongoDBに新規追加されたメッセージをSlackへ転送します。
 func CreateSlackMessage(msg model.Message) {
 	// Slack Incoming WebhookのURL
-	webhookURL := "https://hooks.slack.com/services/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"
+	webhookURL := "https://hooks.slack.com/services/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"
 
 	// メッセージ送信者、内容、送信元プラットフォームを取得
 	userName := msg.User.Name
