@@ -1,8 +1,12 @@
 package slack
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
+	"fmt"
+	"fuagfuga-2025-LinkGate/src/model"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -11,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/slack-go/slack"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -27,8 +32,21 @@ func NewSlackHandler(collection *mongo.Collection, ctx context.Context) *SlackHa
 		log.Fatal("SLACK_BOT_TOKEN environment variable is required")
 	}
 
+	log.Printf("Slack Bot Token: %s...", token[:10]) // 最初の10文字だけ表示
+
+	api := slack.New(token)
+
+	// トークンの有効性をテスト
+	_, err := api.AuthTest()
+	if err != nil {
+		log.Printf("Warning: Slack API auth test failed: %v", err)
+		log.Printf("This might cause user info retrieval to fail")
+	} else {
+		log.Printf("Slack API authentication successful")
+	}
+
 	return &SlackHandler{
-		api:        slack.New(token),
+		api:        api,
 		collection: collection,
 		ctx:        ctx,
 	}
@@ -51,13 +69,10 @@ type SlackMessage struct {
 // HandleSlackEvents handles Slack event subscriptions
 func (h *SlackHandler) HandleSlackEvents(c *gin.Context) {
 	log.Printf("=== Slack Event Received ===")
-	log.Printf("Method: %s", c.Request.Method)
-	log.Printf("URL: %s", c.Request.URL.String())
 
 	// Slackからのリクエストを検証
 	verifier, err := slack.NewSecretsVerifier(c.Request.Header, os.Getenv("SLACK_SIGNING_SECRET"))
 	if err != nil {
-		log.Printf("Failed to create secrets verifier: %v", err)
 		c.Status(http.StatusBadRequest)
 		return
 	}
@@ -65,22 +80,19 @@ func (h *SlackHandler) HandleSlackEvents(c *gin.Context) {
 	// リクエストボディを読み取り
 	body, err := c.GetRawData()
 	if err != nil {
-		log.Printf("Failed to read request body: %v", err)
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
-	log.Printf("Request body: %s", string(body))
+	// log.Printf("Request body: %s", string(body))
 
 	// 署名を検証
 	if _, err := verifier.Write(body); err != nil {
-		log.Printf("Failed to write body to verifier: %v", err)
 		c.Status(http.StatusBadRequest)
 		return
 	}
 
 	if err := verifier.Ensure(); err != nil {
-		log.Printf("Invalid signature: %v", err)
 		c.Status(http.StatusUnauthorized)
 		return
 	}
@@ -92,7 +104,6 @@ func (h *SlackHandler) HandleSlackEvents(c *gin.Context) {
 	}
 
 	if err := json.Unmarshal(body, &challenge); err == nil && challenge.Type == "url_verification" {
-		log.Printf("URL verification challenge received: %s", challenge.Challenge)
 		c.JSON(http.StatusOK, gin.H{"challenge": challenge.Challenge})
 		return
 	}
@@ -119,29 +130,17 @@ func (h *SlackHandler) handleSlackEvent(body []byte) {
 	}
 
 	if err := json.Unmarshal(body, &eventWrapper); err != nil {
-		log.Printf("Failed to parse event wrapper: %v", err)
 		return
 	}
 
-	log.Printf("Event wrapper type: %s", eventWrapper.Type)
-
 	if eventWrapper.Type == "event_callback" {
 		log.Printf("=== Processing Event Callback ===")
-		log.Printf("Inner event type: %s", eventWrapper.Event.Type)
 
 		if eventWrapper.Event.Type == "message" {
 			// ボット自身のメッセージは無視
 			if eventWrapper.Event.BotID != "" {
-				log.Printf("Ignoring bot message (BotID: %s)", eventWrapper.Event.BotID)
 				return
 			}
-
-			log.Printf("=== Slack Message Received ===")
-			log.Printf("Channel: %s", eventWrapper.Event.Channel)
-			log.Printf("User: %s", eventWrapper.Event.User)
-			log.Printf("Message: %s", eventWrapper.Event.Text)
-			log.Printf("Timestamp: %s", eventWrapper.Event.Timestamp)
-			log.Printf("=============================")
 
 			// データベースに保存
 			h.saveMessageToDatabase(eventWrapper.Event)
@@ -162,40 +161,59 @@ func (h *SlackHandler) saveMessageToDatabase(event struct {
 	Timestamp string `json:"ts"`
 	BotID     string `json:"bot_id"`
 }) {
-	// 新しいコンテキストを作成（タイムアウトを設定）
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
+	log.Printf("=== Getting User Info ===")
+	log.Printf("User ID: %s", event.User)
 
 	// ユーザー情報を取得
 	user, err := h.api.GetUserInfo(event.User)
 
 	userName := "unknown"
+	iconURL := ""
+
 	if err != nil {
 		log.Printf("Failed to get user info: %v", err)
+		log.Printf("Error type: %T", err)
 	} else if user != nil {
-		userName = user.Name
+		log.Printf("User found: %+v", user)
+		log.Printf("User Profile: %+v", user.Profile)
+
+		// ユーザー名の優先順位: DisplayName > RealName > Name
+		if user.Profile.DisplayName != "" {
+			userName = user.Profile.DisplayName
+		} else if user.Profile.RealName != "" {
+			userName = user.Profile.RealName
+		} else if user.Name != "" {
+			userName = user.Name
+		} else {
+			userName = event.User // フォールバックとしてユーザーIDを使用
+		}
+
+		iconURL = user.Profile.Image72
+		log.Printf("Selected username: %s", userName)
+		log.Printf("Extracted icon URL: %s", iconURL)
+	} else {
+		log.Printf("User is nil")
 	}
 
-	log.Printf("=== Slack Message Received ===")
-	// log.Printf("Channel: %s", eventWrapper.Event.Channel)
-	log.Printf("User: %s", userName)
-	log.Printf("Message: %s", event.Text)
-	log.Printf("Timestamp: %s", event.Timestamp)
-	log.Printf("=============================")
+	// model.Message構造体に保存内容を格納
+	var message model.Message
+	message.ID = primitive.NewObjectID()
+	message.User.ID = primitive.NewObjectID()
+	message.User.UserID = event.User
+	message.User.Platform = model.PlatformSlack
+	message.User.Name = userName
+	message.User.IconUrl = iconURL
+	message.Content.ID = primitive.NewObjectID()
+	message.Content.Text = event.Text
+	message.CreatedAt = time.Now()
 
-	// SlackMessage構造体を作成
-	slackMessage := SlackMessage{
-		UserID:    event.User,
-		UserName:  userName,
-		Message:   event.Text,
-		Timestamp: time.Now().Format(time.RFC3339),
-		SlackTS:   event.Timestamp,
-		CreatedAt: time.Now(),
-		Source:    "slack",
-	}
+	log.Printf("Final message: %+v", message)
 
 	// データベースに挿入（新しいコンテキストを使用）
-	result, err := h.collection.InsertOne(ctx, slackMessage)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	result, err := h.collection.InsertOne(ctx, message)
 	if err != nil {
 		log.Printf("Failed to save message to database: %v", err)
 		return
@@ -224,42 +242,59 @@ func (h *SlackHandler) GetSlackMessages() ([]SlackMessage, error) {
 	return messages, nil
 }
 
-// handleMessageEvent processes message events
-func (h *SlackHandler) handleMessageEvent(event *slack.MessageEvent) {
-	// ボット自身のメッセージは無視
-	if event.BotID != "" {
-		return
-	}
-
-	// メッセージの詳細を取得
-	channel, err := h.api.GetConversationInfo(&slack.GetConversationInfoInput{
-		ChannelID: event.Channel,
-	})
-	if err != nil {
-		log.Printf("Failed to get channel info: %v", err)
-		return
-	}
-
-	user, err := h.api.GetUserInfo(event.User)
-	if err != nil {
-		log.Printf("Failed to get user info: %v", err)
-		return
-	}
-
-	// メッセージ情報をログ出力
-	log.Printf("=== Slack Message Received ===")
-	log.Printf("Channel: %s (%s)", channel.Name, channel.ID)
-	log.Printf("User: %s (%s)", user.Name, user.ID)
-	log.Printf("Message: %s", event.Text)
-	log.Printf("Timestamp: %s", event.Timestamp)
-	log.Printf("=============================")
-
-	// ここでメッセージの処理ロジックを追加
-	// 例: データベースに保存、他のサービスに転送など
-}
-
 // SendMessage sends a message to a Slack channel
 func (h *SlackHandler) SendMessage(channelID, message string) error {
 	_, _, err := h.api.PostMessage(channelID, slack.MsgOptionText(message, false))
 	return err
+}
+
+// CreateSlackMessage はMongoDBに新規追加されたメッセージをSlackへ転送します。
+func CreateSlackMessage(msg model.Message) {
+	// Slack Incoming WebhookのURL
+	webhookURL := "https://hooks.slack.com/services/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"
+
+	// メッセージ送信者、内容、送信元プラットフォームを取得
+	userName := msg.User.Name
+	text := msg.Content.Text
+	platform := msg.User.Platform
+
+	// Slack用のメッセージペイロードを作成
+	slackPayload := map[string]interface{}{
+		"text":       fmt.Sprintf("from: %sさん\n\n%s\n\n(Platform: %s)", userName, text, platform),
+		"username":   "LinkGate Bot",
+		"icon_emoji": ":link:",
+	}
+
+	// JSONにエンコード
+	body, err := json.Marshal(slackPayload)
+	if err != nil {
+		log.Printf("SlackメッセージのJSONエンコードに失敗しました: %v", err)
+		return
+	}
+
+	// HTTPリクエストを作成
+	req, err := http.NewRequest("POST", webhookURL, bytes.NewBuffer(body))
+	if err != nil {
+		log.Printf("Slackリクエストの生成に失敗しました: %v", err)
+		return
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	// HTTPクライアントでリクエストを送信
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("Slack Incoming Webhook呼び出しでエラーが発生しました: %v", err)
+		return
+	}
+	defer resp.Body.Close()
+
+	// レスポンスのステータスコードをチェック
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		respBody, _ := io.ReadAll(resp.Body)
+		log.Printf("Slack Incoming Webhookからエラーコード %d が返されました: %s", resp.StatusCode, string(respBody))
+		return
+	}
+
+	log.Println("Slack送信成功")
 }
