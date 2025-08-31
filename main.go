@@ -4,10 +4,10 @@ import (
 	"context"
 	"fuagfuga-2025-LinkGate/src/router"
 	"fuagfuga-2025-LinkGate/src/usecase"
+	"fuagfuga-2025-LinkGate/src/usecase/discord"
 	"log"
-	"time"
-
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -45,6 +45,8 @@ func main() {
 	router.SetupRoutes(r, collection, ctx, client)
 
 	go usecase.WatchChanges(collection)
+
+	go discord.InitializeDiscordBot(collection)
 
 	// サーバーを起動
 	if err := r.Run(":8080"); err != nil {
