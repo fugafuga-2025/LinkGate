@@ -6,6 +6,7 @@ import (
 	"fuagfuga-2025-LinkGate/src/model"
 	"fuagfuga-2025-LinkGate/src/usecase/discord"
 	"fuagfuga-2025-LinkGate/src/usecase/line"
+	"fuagfuga-2025-LinkGate/src/usecase/slack"
 	"log"
 
 	"go.mongodb.org/mongo-driver/mongo"
@@ -48,6 +49,10 @@ func WatchChanges(coll *mongo.Collection) {
 			// 元プラットフォームがDiscordでなければDiscordへ送信
 			if platform != model.PlatformDiscord {
 				discord.CreateDiscordMessage(fullDoc)
+			}
+			// 元プラットフォームがSlackでなければSlackへ送信
+			if platform != model.PlatformSlack {
+				slack.CreateSlackMessage(fullDoc)
 			}
 		}
 

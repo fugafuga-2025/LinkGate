@@ -4,6 +4,7 @@ import (
 	"context"
 	"fuagfuga-2025-LinkGate/src/controller"
 	"fuagfuga-2025-LinkGate/src/service"
+	"fuagfuga-2025-LinkGate/src/usecase/slack"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -49,8 +50,23 @@ func SetupRoutes(r *gin.Engine, collection *mongo.Collection, ctx context.Contex
 	})
 
 	// === LINE API ===
+	// === LINE API ===
 	// webhookのイベントをキャッチ
 	r.Any("/linehook", func(c *gin.Context) {
 		controller.LINEController(c, collection)
+	})
+
+	// === SLACK API ===
+	slackHandler := slack.NewSlackHandler(collection, ctx)
+	r.POST("/slack/events", slackHandler.HandleSlackEvents)
+
+	// Slackメッセージを取得するエンドポイント
+	r.GET("/slack/messages", func(c *gin.Context) {
+		messages, err := slackHandler.GetSlackMessages()
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, messages)
 	})
 }
