@@ -1,5 +1,5 @@
 <div align="center">
-<img width="120" src="linkgate_logo">
+<img width="300" src="https://github.com/user-attachments/assets/6ff76b84-71c2-4f85-bbc6-2de1fe10eed3">
 </div>
 
 # LinkGate
