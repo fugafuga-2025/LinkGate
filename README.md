@@ -6,7 +6,7 @@
 
 **LinkGate は、sns プラットフォーム間のコミュニケーションを円滑にするためのパイプラインを提供するシステムです。**
 
-![LinkGate](https://github.com/user-attachments/assets/384bcc32-96e7-484d-aee0-8332888ee8e0)
+![ LinkGate](https://github.com/user-attachments/assets/c87f6bee-2052-430a-96f9-7c4ab59d1ae0)
 
 ## 🔗 背景
 
