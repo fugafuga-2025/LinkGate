@@ -1,86 +1,55 @@
+<div align="center">
+<img width="300" src="https://github.com/user-attachments/assets/6ff76b84-71c2-4f85-bbc6-2de1fe10eed3">
+</div>
+
 # LinkGate
 
-## 📦 使用技術
+**LinkGate は、sns プラットフォーム間のコミュニケーションを円滑にするためのパイプラインを提供するシステムです。**
 
-- [Go 1.24](https://go.dev/)
-- [Dev Containers](https://containers.dev/)
-- 拡張機能（自動インストール）:
-  - Go
-  - GitLens
-  - TODO Tree
-  - Error Lens
-  - Code Spell Checker
-  - 日本語言語パック
+![ LinkGate](https://github.com/user-attachments/assets/c87f6bee-2052-430a-96f9-7c4ab59d1ae0)
 
----
+## 🔗 背景
 
-## 🛠️ 前提条件
+昨今、SNS には多種多様なプラットフォームが存在します。日常的に使われるものから、仕事向け、特定のコミュニティに特化したものまでさまざまです。
+イベント運営や団体のコミュニケーションツールとしても幅広く利用されていますが、参加者にとっては「指定されたツールのアカウントを持っていない」「新規登録が手間」といった不便さがつきものです。
 
-以下をインストールしておいてください。
+LinkGate は、こうした面倒を解消するために生まれました。
+**異なるプラットフォーム間の垣根をなくし、スムーズにコミュニケーションできるパイプラインを提供します。** わざわざ他のツールをインストールしなくても、使い慣れたツールで他のツールを使用している人とやり取りすることができます。
 
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [Dev Containers 拡張機能](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-- [Docker](https://www.docker.com/)
+まずはよく使用される LINE / Discord / Slack の垣根を取り壊しました。さらに Web API も提供しているので、あなたのサービスに組み込むことも可能です。
 
----
+## 🔗 開発メンバー
 
-## 🚀 開発環境の立ち上げ手順
+matsu / maru / shoga / .mealu / 羊羽 / 273\*
 
-### 1. リポジトリをクローン
+本開発では、 **「使ったことない技術を学ぶ」** をサブ目標として進めました。
 
-```bash
-git clone https://github.com/fugafuga-2025/LinkGate.git
-```
+## 🔗 開発環境・使用技術・ツール
 
-```bash
-cd LinkGate
-```
+<H3>開発期間：1ヶ月</H3>
 
-### 2. 開発環境の立ち上げ
+<H3>技術スタック</H3>
+<a href="https://skillicons.dev">
+   <img src="https://skillicons.dev/icons?i=go,mongo,github,git,vscode,docker"/>
+</a>
 
-1. Docker Desktop を立ち上げる
+## 🔗 動作対象端末・OS
 
-2. 右下に表示される`コンテナーで再度開く`を押すか、
-   VS Code 上でコマンドパレットを開き、`Dev Containers: Reopen in Container` を選択
-3. `cp -n .env.example .env`で環境変数ファイルをコピー
-4. `task dev`を実行
+- macOS Sequoia 15.6.1
+- Windows 11
 
-初回起動時は Docker イメージのビルドや拡張機能のインストールに数分かかります。
+## 🔗 使用方法
 
----
+- LinkGate はデプロイして利用するサービスです。
+  ご自身でサーバーを立てて運用することも、任意のデプロイサービスを利用することも可能です。
 
-## 📝 Taskfile の使用方法
+### 1. LinkGate を立ち上げる
 
-本プロジェクトでは、タスクランナーとして [Task](https://taskfile.dev/) を使用しています。
+`docs/setup.md`を参考に LinkGate を立ち上げてください。
 
-### 利用可能なタスク一覧を表示
+### 2. 各プラットフォームに bot を追加
 
-```bash
-task
-```
+## 🔗 免責事項
 
-### 主要なタスク
-
-#### 開発関連
-
-- `task dev` - ホットリロード付きで開発サーバーを起動
-- `task run -- ファイル` - アプリケーションを実行
-- `task build -- ファイル` - アプリケーションをビルド
-
-#### コード品質
-
-- `task fmt` - コードをフォーマット
-- `task lint` - リンターを実行
-- `task test` - テストを実行
-- `task check` - 全てのコード品質チェックを実行
-
-## 💬 使えるコメントの説明
-
-本プロジェクトでは、`TODO Tree` 拡張機能を利用して、コード内のコメントを一覧表示できます。以下のようなコメントをコード中に記述することで、タスクや注意事項を簡単に管理できます。
-
-- `// TODO: やるべきこと`
-- `// FIXME: 修正が必要な箇所`
-- `// NOTE: 補足情報や注意点`
-- `// BUG: バグの報告`
-
-これらのキーワードを含むコメントは、ファイル内でハイライト、自動的に検出され、一覧表示されます。
+> [!CAUTION]
+> この作成物および同梱物を使用したことによって生じたすべての障害・損害・不具合等に関しては，私と私の関係者および私の所属するいかなる団体・組織とも，一切の責任を負いません．各自の責任においてご使用ください．
